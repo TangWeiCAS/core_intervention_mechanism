@@ -106,3 +106,44 @@ for(j in c("Moca"))
   }
 }
 }
+
+#####
+#Lme plot (DAN)
+library(lme4)
+library(ggplot2)
+library(ggeffects)
+fm <- lmer(Moca ~ 1 + age + sex + edu + fd + DA + (1|subject), data)
+summary(fm)
+pred.mm<-ggpredict(fm,terms=c("DA [2:25 by=0.1]"))
+pred.mm
+
+#绘制预测结果
+fig<-ggplot(pred.mm,aes(x, y = predicted)) +
+  geom_line(data = data, 
+            mapping = aes(x = DA, y = Moca, group = subject, color = group),
+            alpha = 1, linewidth = 0.5) +
+  geom_point(data,mapping=aes(x = DA, y = Moca, colour = group),size=2,alpha=1) + 
+  scale_color_manual(values = c("TG" = "#ec0000", "CG" = "#00468b"))+  
+  geom_ribbon(aes(x, ymin = predicted - std.error, ymax = predicted + std.error),      
+              fill = "lightgrey", alpha = 0.9) +  
+  geom_smooth(method = "lm",alpha=1,linewidth=1.5,colour="black") +
+  labs(x = "DAN Within-FCS", y = "MoCA") +  
+  theme_bw() +
+  theme(panel.grid = element_blank(),legend.position="top",
+        panel.border = element_rect(colour = "black", linewidth = 1),
+        text = element_text(size = 15),
+        axis.title = element_text(size = 14, color = "black",face = "bold"),
+        axis.text = element_text(size = 14,color = "black"),
+        axis.text.x = element_text(margin=margin(t =3)),
+        axis.text.y = element_text(size = 14),
+        axis.title.y = element_text(margin = margin(r = 12)),
+        axis.ticks.x = element_line(color = "black",linewidth =0.5),
+        axis.ticks.length.x = unit(0.3,"cm"),
+        axis.ticks.y = element_line(color = "black",linewidth =0.5),
+        axis.ticks.length.y = unit(0.3,"cm"))+
+  scale_y_continuous(expand = expansion(0),limits = c(19,31),
+                     breaks = seq(20,30,2))+
+  scale_x_continuous(expand = expansion(0),limits = c(0,26),
+                     breaks = seq(0,26,5))
+fig
+ggsave("lme.tiff", fig , width = 8, height = 8, dpi = 600)
